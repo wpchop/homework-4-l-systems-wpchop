@@ -4,32 +4,39 @@ import * as DAT from 'dat-gui';
 import Icosphere from './geometry/Icosphere';
 import Square from './geometry/Square';
 import Cube from './geometry/Cube';
+import Plant from './geometry/Plant';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
+import LSystem from './lsystem/LSystem';
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
-  color: [255.0, 0.0, 0.0],
-  shader: 'custom'
+  axiom: 'A',
+  color: [255.0, 150.0, 0.0],
+  shader: 'lambert',
+  iterations: 3,
 };
 
 let icosphere: Icosphere;
 let square: Square;
 let cube: Cube;
+let plant: Plant;
 let count = 0;
 
+let lsystem: LSystem;
+
 function loadScene() {
-  icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, controls.tesselations);
-  icosphere.create();
-  square = new Square(vec3.fromValues(0, 0, 0));
-  square.create();
-  cube = new Cube(vec3.fromValues(0,0,0));
-  cube.create()
+  plant = new Plant(vec3.fromValues(0,0,0));
+  plant.create()
+}
+
+function loadLSystem() {
+  
 }
 
 function main() {
@@ -45,8 +52,9 @@ function main() {
   const gui = new DAT.GUI();
   gui.add(controls, 'tesselations', 0, 8).step(1);
   gui.add(controls, 'Load Scene');
+  gui.add(controls, 'axiom');
+  gui.add(controls, 'iterations', 1, 5).step(1);
   gui.addColor(controls, 'color');
-  gui.add(controls, 'shader', ['lambert', 'custom']);
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -64,7 +72,7 @@ function main() {
   const camera = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
-  renderer.setClearColor(0.2, 0.2, 0.2, 1);
+  renderer.setClearColor(0.60, 0.80, 0.95, 1);
   gl.enable(gl.DEPTH_TEST);
 
   const lambert = new ShaderProgram([
@@ -72,10 +80,15 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
   ]);
 
-  const custom = new ShaderProgram([
-    new Shader(gl.VERTEX_SHADER, require('./shaders/custom-vert.glsl')),
-    new Shader(gl.FRAGMENT_SHADER, require('./shaders/custom-frag.glsl')),
-  ]);
+  // Make LSystem, add rules
+  const lsystem = new LSystem(controls.axiom, controls.iterations);
+
+  // Expand grammar
+  lsystem.expandAxiom(controls.iterations);
+  debugger;
+  
+  // Fill mesh
+  
 
   // This function will be called every frame
   function tick() {
@@ -84,16 +97,13 @@ function main() {
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
-    console.log(count);
+    // console.log(count);
     let col: vec4 = vec4.fromValues(controls.color[0]/255,controls.color[1]/255,controls.color[2]/255, 1.0);
     let shader = lambert;
-    if (controls.shader == 'custom') {
-      shader = custom;
-    }
     renderer.render(camera, shader, col, count, [
-      icosphere,
+      // icosphere,
       // square,
-      // cube,
+      plant,
     ]);
     stats.end();
 
