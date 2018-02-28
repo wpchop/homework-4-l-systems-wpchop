@@ -10,6 +10,7 @@ import Camera from './Camera';
 import {setGL} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 import LSystem from './lsystem/LSystem';
+import Turtle from './lsystem/Turtle';
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
@@ -32,7 +33,7 @@ let lsystem: LSystem;
 
 function loadScene() {
   plant = new Plant(vec3.fromValues(0,0,0));
-  plant.create()
+  // plant.create()
 }
 
 function loadLSystem() {
@@ -85,10 +86,11 @@ function main() {
 
   // Expand grammar
   lsystem.expandAxiom(controls.iterations);
-  debugger;
   
   // Fill mesh
-  
+  let turtle : Turtle = new Turtle();
+  turtle.draw(plant, lsystem.LinkedListToString(lsystem.axiom));
+  plant.create();
 
   // This function will be called every frame
   function tick() {
