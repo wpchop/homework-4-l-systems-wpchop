@@ -46,14 +46,12 @@ export class LSystem {
     iterations: number;
     rules: {[input: string] : string} = {};
     outputString: LinkedList;
-    // turtles: Stack<Turtle>;
-    // turtles: Stack<number>;
 
     initRules() {
         this.rules["X"] = "F-[[X]+X]+F[+FX]-X";
         this.rules["F"] = "FF";
-        this.rules["A"] = "BB";
-        this.rules["B"] = "BCA";
+        this.rules["A"] = "B[A]A";
+        this.rules["B"] = "BB";
     }
 
     constructor(axiom: string, iter: number) {

@@ -20,7 +20,7 @@ const controls = {
   axiom: 'A',
   color: [255.0, 150.0, 0.0],
   shader: 'lambert',
-  iterations: 3,
+  iterations: 2,
 };
 
 let icosphere: Icosphere;
