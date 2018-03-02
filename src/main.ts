@@ -20,7 +20,7 @@ const controls = {
   axiom: 'A',
   color: [255.0, 150.0, 0.0],
   shader: 'lambert',
-  iterations: 4,
+  iterations: 1,
 };
 
 let icosphere: Icosphere;
@@ -33,11 +33,18 @@ let lsystem: LSystem;
 
 function loadScene() {
   plant = new Plant(vec3.fromValues(0,0,0));
-  // plant.create()
 }
 
-function loadLSystem() {
+function loadLSystem(lsystem: LSystem) {
+    lsystem = new LSystem(controls.axiom, controls.iterations);
+    plant = new Plant(vec3.fromValues(0,0,0));
+    // Expand grammar
+    lsystem.expandAxiom(controls.iterations);
   
+    // Fill mesh
+    let turtle : Turtle = new Turtle();
+    turtle.draw(plant, lsystem.LinkedListToString(lsystem.axiom), controls.iterations);
+    plant.create();
 }
 
 function main() {
@@ -53,8 +60,8 @@ function main() {
   const gui = new DAT.GUI();
   gui.add(controls, 'tesselations', 0, 8).step(1);
   gui.add(controls, 'Load Scene');
-  gui.add(controls, 'axiom');
-  gui.add(controls, 'iterations', 1, 5).step(1);
+  let axiom = gui.add(controls, 'axiom');
+  let iterations = gui.add(controls, 'iterations', 1, 5).step(1);
   gui.addColor(controls, 'color');
 
   // get canvas and webgl context
@@ -67,9 +74,6 @@ function main() {
   // Later, we can import `gl` from `globals.ts` to access it
   setGL(gl);
 
-  // Initial call to load scene
-  loadScene();
-
   const camera = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
@@ -81,16 +85,9 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/lambert-frag.glsl')),
   ]);
 
-  // Make LSystem, add rules
-  const lsystem = new LSystem(controls.axiom, controls.iterations);
+  // Make LSystem
+  loadLSystem(lsystem);
 
-  // Expand grammar
-  lsystem.expandAxiom(controls.iterations);
-  
-  // Fill mesh
-  let turtle : Turtle = new Turtle();
-  turtle.draw(plant, lsystem.LinkedListToString(lsystem.axiom));
-  plant.create();
 
   // This function will be called every frame
   function tick() {
@@ -122,6 +119,15 @@ function main() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   camera.setAspectRatio(window.innerWidth / window.innerHeight);
   camera.updateProjectionMatrix();
+
+  axiom.onFinishChange(function(value: string) {
+    renderer.clear();
+    loadLSystem(lsystem);  });
+
+  iterations.onFinishChange(function(value: any) {
+    renderer.clear();
+    loadLSystem(lsystem);
+  });
 
   // Start the render loop
   tick();
