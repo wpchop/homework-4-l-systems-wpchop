@@ -21,7 +21,7 @@ const controls = {
   branch: [108.0, 186.0, 115.0],
   leaf: [133.0, 108.0, 187.0],
   shader: 'lambert',
-  iterations: 3,
+  iterations: 4,
 };
 
 let icosphere: Icosphere;
