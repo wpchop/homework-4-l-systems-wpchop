@@ -18,7 +18,8 @@ const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
   axiom: 'A',
-  color: [255.0, 150.0, 0.0],
+  branch: [255.0, 150.0, 0.0],
+  leaf: [20.0, 190.0, 0.0],
   shader: 'lambert',
   iterations: 1,
 };
@@ -41,9 +42,12 @@ function loadLSystem(lsystem: LSystem) {
     // Expand grammar
     lsystem.expandAxiom(controls.iterations);
   
+    let col1 : vec4 = vec4.fromValues(controls.branch[0]/255,controls.branch[1]/255,controls.branch[2]/255, 1.0);
+    let col2 : vec4 = vec4.fromValues(controls.leaf[0]/255,controls.leaf[1]/255,controls.leaf[2]/255, 1.0);
+
     // Fill mesh
-    let turtle : Turtle = new Turtle();
-    turtle.draw(plant, lsystem.LinkedListToString(lsystem.axiom), controls.iterations);
+    let turtle : Turtle = new Turtle(col1, col2, controls.iterations);
+    turtle.draw(plant, lsystem.LinkedListToString(lsystem.axiom));
     plant.create();
 }
 
@@ -62,7 +66,8 @@ function main() {
   gui.add(controls, 'Load Scene');
   let axiom = gui.add(controls, 'axiom');
   let iterations = gui.add(controls, 'iterations', 1, 5).step(1);
-  gui.addColor(controls, 'color');
+  let branch = gui.addColor(controls, 'branch');
+  let leaf = gui.addColor(controls, 'leaf')
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -88,7 +93,6 @@ function main() {
   // Make LSystem
   loadLSystem(lsystem);
 
-
   // This function will be called every frame
   function tick() {
     count++;
@@ -96,12 +100,9 @@ function main() {
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
-    // console.log(count);
-    let col: vec4 = vec4.fromValues(controls.color[0]/255,controls.color[1]/255,controls.color[2]/255, 1.0);
+    let col: vec4 = vec4.fromValues(controls.branch[0]/255,controls.branch[1]/255,controls.branch[2]/255, 1.0);
     let shader = lambert;
     renderer.render(camera, shader, col, count, [
-      // icosphere,
-      // square,
       plant,
     ]);
     stats.end();
@@ -122,13 +123,23 @@ function main() {
 
   axiom.onFinishChange(function(value: string) {
     renderer.clear();
-    loadLSystem(lsystem);  });
+    loadLSystem(lsystem);  
+  });
 
   iterations.onFinishChange(function(value: any) {
     renderer.clear();
     loadLSystem(lsystem);
   });
 
+  leaf.onChange(function(value: any) {
+    renderer.clear();
+    loadLSystem(lsystem);
+  });
+
+  branch.onChange(function(value: any) {
+    renderer.clear();
+    loadLSystem(lsystem);
+  });
   // Start the render loop
   tick();
 }

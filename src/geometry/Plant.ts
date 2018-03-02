@@ -6,10 +6,12 @@ class Plant extends Drawable {
   plantIndices: number[];
   plantPositions: number[];
   plantNormals: number[];
+  plantColors: number [];
 
   indices: Uint32Array;
   positions: Float32Array;
   normals: Float32Array;
+  colors: Float32Array;
   center: vec4;
 
   constructor(center: vec3) {
@@ -17,6 +19,7 @@ class Plant extends Drawable {
     this.plantIndices = [];
     this.plantPositions = [];
     this.plantNormals = [];
+    this.plantColors = [];
     this.center = vec4.fromValues(center[0], center[1], center[2], 1);
   }
 
@@ -25,10 +28,12 @@ class Plant extends Drawable {
     this.indices = Uint32Array.from(this.plantIndices);
     this.normals = Float32Array.from(this.plantNormals);
     this.positions = Float32Array.from(this.plantPositions);
+    this.colors = Float32Array.from(this.plantColors);
 
     this.generateIdx();
     this.generatePos();
     this.generateNor();
+    this.generateCol();
 
     this.count = this.indices.length;
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufIdx);
@@ -39,6 +44,9 @@ class Plant extends Drawable {
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.bufPos);
     gl.bufferData(gl.ARRAY_BUFFER, this.positions, gl.STATIC_DRAW);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.bufCol);
+    gl.bufferData(gl.ARRAY_BUFFER, this.colors, gl.STATIC_DRAW);
 
     console.log(`Created plant`);
   }

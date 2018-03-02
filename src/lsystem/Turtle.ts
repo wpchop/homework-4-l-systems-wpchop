@@ -27,7 +27,10 @@ export class Turtle {
 
   turtleStack: TurtleState [];
 
-  scaleFactor: number;
+  iterations: number;
+
+  branchCol: vec4;
+  leafCol: vec4;
 
   constructBaseINP() {
     this.turtleIndices.push(0, 1, 2,
@@ -100,7 +103,7 @@ export class Turtle {
     );
   }
 
-  constructor() {
+  constructor(branchCol: vec4, leafCol: vec4, iter: number) {
     this.turtleIndices = [];
     this.turtleNormals = [];
     this.turtlePositions = [];
@@ -113,9 +116,14 @@ export class Turtle {
     this.turtleStack = [];
     this.turtleStack.push(new TurtleState(vec3.create(), quat.create(), 0));
 
+    this.branchCol = branchCol;
+    this.leafCol = leafCol;
+
+    this.iterations = iter;
+
   }
 
-  applyMatrix(plant: Plant, transform: mat4) {
+  applyMatrix(plant: Plant, transform: mat4, isLeaf: boolean) {
     let turtleIdx = this.turtleIndices.length;
     let plantIdxLength = plant.plantIndices.length;
     let idxNum = plant.plantIndices[plantIdxLength - 1];
@@ -158,12 +166,23 @@ export class Turtle {
       plant.plantPositions.push(pos[2]);
       plant.plantPositions.push(pos[3]);
     }
+    let color = vec4.create();
+  
+    if (!isLeaf) {
+      color = this.branchCol;
+    } else {
+      color = this.leafCol
+    }
+
+    for (let i = 0; i < this.turtlePositions.length - 1; i+=4) {
+      plant.plantColors.push(color[0], color[1], color[2], color[3]);
+    }
   }
 
   getMatrix() {
     let transform : mat4 = mat4.create();
 
-    mat4.fromScaling(this.scale, vec3.fromValues(0.05 / this.scaleFactor, 0.5 / this.scaleFactor,0.05/ this.scaleFactor));
+    mat4.fromScaling(this.scale, vec3.fromValues(0.05 / this.iterations, 0.5 / this.iterations,0.05/ this.iterations));
     mat4.fromQuat(this.rotate, this.turtleStack[this.turtleStack.length - 1].q);
     mat4.fromTranslation(this.translate, this.turtleStack[this.turtleStack.length - 1].position);
     mat4.multiply(transform, this.translate, this.rotate);
@@ -177,10 +196,6 @@ export class Turtle {
     return this.rotate;
   }
 
-  drawBinaryTree(plant: Plant, string: string) {
-
-  }
-
   // after drawing a branch, update the turtlestate
   updateTurtlePosition(localPos : vec4) {
     vec4.transformMat4(localPos, localPos, this.getRotation());
@@ -190,8 +205,7 @@ export class Turtle {
       vec3.fromValues(localPos[0], localPos[1], localPos[2]);
   }
 
-  draw(plant: Plant, string: string, scaleBy: number) {
-    this.scaleFactor = scaleBy;
+  draw(plant: Plant, string: string) {
     for (let x = 0; x < string.length; x++) {
       let currChar = string.charAt(x);
       let topTurtle = this.turtleStack[this.turtleStack.length - 1];
@@ -201,11 +215,13 @@ export class Turtle {
 
         let transform = this.getMatrix();
         mat4.multiply(transform, transform, transformLocal);
-        this.applyMatrix(plant, transform);
+        this.applyMatrix(plant, transform, true);
 
         // update turtlestate position
-        let pos = vec4.fromValues(0,1 / this.scaleFactor,0,1);
+        let pos = vec4.fromValues(0,1 / this.iterations,0,1);
         this.updateTurtlePosition(pos);
+
+        // this.turtleStack[this.turtleStack.length - 1].depth++;
         
       } else if (currChar == "B") {
         let transformLocal = mat4.create();
@@ -213,20 +229,21 @@ export class Turtle {
 
         let transform = this.getMatrix();
         mat4.multiply(transform, transform, transformLocal);
-        this.applyMatrix(plant, transform);
+        this.applyMatrix(plant, transform, false);
 
         // update turtlestate position to end of branch
-        let pos = vec4.fromValues(0,1 / this.scaleFactor,0,1);
+        let pos = vec4.fromValues(0,1 / this.iterations,0,1);
         this.updateTurtlePosition(pos);
       } else if (currChar == "[") {
         let pos = topTurtle.position;
-        let depth = topTurtle.depth + 1;
+        let depth = topTurtle.depth;
         let q = topTurtle.q;
         let q2 = quat.create();
         quat.fromEuler(q2, 0, 0, 45);
         quat.multiply(q2, q, q2);
         let turt = new TurtleState(pos, q2, depth);
         this.turtleStack.push(turt);
+        // this.turtleStack[this.turtleStack.length - 1].depth++;
       } else if (currChar == "]") {
         this.turtleStack.pop();
         let q = this.turtleStack[this.turtleStack.length - 1].q;
