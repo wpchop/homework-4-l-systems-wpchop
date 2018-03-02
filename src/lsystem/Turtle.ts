@@ -113,8 +113,9 @@ export class Turtle {
     this.rotate = mat4.create();
     this.scale = mat4.create();
 
+
     this.turtleStack = [];
-    this.turtleStack.push(new TurtleState(vec3.create(), quat.create(), 0));
+    this.turtleStack.push(new TurtleState(vec3.fromValues(0,-2,0), quat.create(), 0));
 
     this.branchCol = branchCol;
     this.leafCol = leafCol;
@@ -220,8 +221,6 @@ export class Turtle {
         // update turtlestate position
         let pos = vec4.fromValues(0,1 / this.iterations,0,1);
         this.updateTurtlePosition(pos);
-
-        // this.turtleStack[this.turtleStack.length - 1].depth++;
         
       } else if (currChar == "B") {
         let transformLocal = mat4.create();
@@ -236,19 +235,24 @@ export class Turtle {
         this.updateTurtlePosition(pos);
       } else if (currChar == "[") {
         let pos = topTurtle.position;
-        let depth = topTurtle.depth;
+        let depth = topTurtle.depth + 1;
         let q = topTurtle.q;
         let q2 = quat.create();
-        quat.fromEuler(q2, 0, 0, 45);
+        let rn = Math.random() * 25 + 35;
+        let rn2 = Math.random() * 10;
+        let rny = Math.random() * 180;
+        quat.fromEuler(q2, rn2, rny, rn);
         quat.multiply(q2, q, q2);
         let turt = new TurtleState(pos, q2, depth);
         this.turtleStack.push(turt);
-        // this.turtleStack[this.turtleStack.length - 1].depth++;
       } else if (currChar == "]") {
         this.turtleStack.pop();
         let q = this.turtleStack[this.turtleStack.length - 1].q;
         let q2 = quat.create();
-        quat.fromEuler(q2, 0, 0, -45);
+        let rn = Math.random() * 25 + 35;
+        let rn2 = Math.random() * 10;
+        let rny = Math.random() * 180;
+        quat.fromEuler(q2, rn2, -rny, -rn);
         quat.multiply(q2, q, q2);
 
         this.turtleStack[this.turtleStack.length - 1].q = q2;

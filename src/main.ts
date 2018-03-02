@@ -18,10 +18,10 @@ const controls = {
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
   axiom: 'A',
-  branch: [255.0, 150.0, 0.0],
-  leaf: [20.0, 190.0, 0.0],
+  branch: [108.0, 186.0, 115.0],
+  leaf: [133.0, 108.0, 187.0],
   shader: 'lambert',
-  iterations: 1,
+  iterations: 3,
 };
 
 let icosphere: Icosphere;
@@ -65,7 +65,7 @@ function main() {
   gui.add(controls, 'tesselations', 0, 8).step(1);
   gui.add(controls, 'Load Scene');
   let axiom = gui.add(controls, 'axiom');
-  let iterations = gui.add(controls, 'iterations', 1, 5).step(1);
+  let iterations = gui.add(controls, 'iterations', 1, 6).step(1);
   let branch = gui.addColor(controls, 'branch');
   let leaf = gui.addColor(controls, 'leaf')
 

@@ -50,7 +50,9 @@ export class LSystem {
     initRules() {
         this.rules["X"] = "F-[[X]+X]+F[+FX]-X";
         this.rules["F"] = "FF";
-        this.rules["A"] = "B[A]A";
+        this.rules["A"] = "B[A][A][A]A";
+        this.rules["C"] = "B[A][A]A";
+        this.rules["D"] = "B[A][A][A][A]A";
         this.rules["B"] = "BB";
     }
 
