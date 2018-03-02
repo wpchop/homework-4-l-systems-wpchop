@@ -1,14 +1,15 @@
-import {vec3, vec4, mat4} from 'gl-matrix';
+import {vec3, vec4, mat4, quat} from 'gl-matrix';
 import Plant from '../geometry/Plant';
 
 class TurtleState {
   position: vec3 = vec3.create();
   orientation: vec3 = vec3.create();
   depth: number;
+  q: quat;
 
-  constructor(position: vec3, orientation: vec3, depth: number) {
+  constructor(position: vec3, q: quat, depth: number) {
     this.position = position;
-    this.orientation = orientation;
+    this.q = q;
     this.depth = depth;
   }
 
@@ -25,7 +26,6 @@ export class Turtle {
   scale: mat4;
 
   turtleStack: TurtleState [];
-  turtleState: TurtleState;
 
   constructBaseINP() {
     this.turtleIndices.push(0, 1, 2,
@@ -109,9 +109,7 @@ export class Turtle {
     this.scale = mat4.create();
 
     this.turtleStack = [];
-    this.turtleStack.push(new TurtleState(vec3.create(), vec3.create(), 0));
-
-    this.turtleState = this.turtleStack[this.turtleStack.length - 1];
+    this.turtleStack.push(new TurtleState(vec3.create(), quat.create(), 0));
 
   }
 
@@ -168,12 +166,18 @@ export class Turtle {
     // mat4.multiply(transform, transform, localTranslate);
 
     mat4.fromScaling(this.scale, vec3.fromValues(0.05,0.5,0.05));
-    mat4.fromRotation(this.rotate, 45 * Math.PI / 180, this.turtleState.orientation);
-    mat4.fromTranslation(this.translate, this.turtleState.position);
+    // mat4.fromRotation(this.rotate, 45 * Math.PI / 180, this.turtleState.orientation);
+    mat4.fromQuat(this.rotate, this.turtleStack[this.turtleStack.length - 1].q);
+    mat4.fromTranslation(this.translate, this.turtleStack[this.turtleStack.length - 1].position);
     mat4.multiply(transform, this.translate, this.rotate);
     mat4.multiply(transform, transform, this.scale);
 
     return transform;
+  }
+
+  getRotation() {
+    mat4.fromQuat(this.rotate, this.turtleStack[this.turtleStack.length - 1].q);
+    return this.rotate;
   }
 
   drawBinaryTree(plant: Plant, string: string) {
@@ -183,9 +187,9 @@ export class Turtle {
   // after drawing a branch, update the turtlestate
   updateTurtlePosition(localPos : vec4) {
     // vec4.transformMat4(localPos, localPos, this.getMatrix());
-    this.getMatrix();
-    vec4.transformMat4(localPos, localPos, this.rotate);
-    let worldPos = this.turtleState.position;
+    // this.getMatrix();
+    vec4.transformMat4(localPos, localPos, this.getRotation());
+    let worldPos = this.turtleStack[this.turtleStack.length - 1].position;
     vec4.add(localPos, localPos, [worldPos[0], worldPos[1], worldPos[2]]);
     this.turtleStack[this.turtleStack.length - 1].position = 
       vec3.fromValues(localPos[0], localPos[1], localPos[2]);
@@ -215,17 +219,27 @@ export class Turtle {
         let pos = vec4.fromValues(0,1,0,1);
         this.updateTurtlePosition(pos);
       } else if (currChar == "[") {
-        let pos = this.turtleState.position;
-        let depth = this.turtleState.depth + 1;
-        let orientation = this.turtleStack[this.turtleStack.length - 1].orientation
-        vec3.add(orientation, orientation, [0,0,1]);
-        let turt = new TurtleState(pos, orientation, depth);
+        let pos = this.turtleStack[this.turtleStack.length - 1].position;
+        let depth = this.turtleStack[this.turtleStack.length - 1].depth + 1;
+
+        let q = this.turtleStack[this.turtleStack.length - 1].q;
+        let q2 = quat.create();
+        quat.fromEuler(q2, 0, 0, 45);
+        quat.multiply(q2, q, q2);
+        
+        let turt = new TurtleState(pos, q2, depth);
         this.turtleStack.push(turt);
       } else if (currChar == "]") {
         this.turtleStack.pop();
-        let orientation = this.turtleStack[this.turtleStack.length - 1].orientation
-        vec3.add(orientation, orientation, [0,0,-2]);
-        this.turtleStack[this.turtleStack.length - 1].orientation = orientation;
+
+        let q = this.turtleStack[this.turtleStack.length - 1].q;
+        let q2 = quat.create();
+        quat.fromEuler(q2, 0, 0, -45);
+        quat.multiply(q2, q, q2);
+
+        this.turtleStack[this.turtleStack.length - 1].q = q2;
+
+
       }
     }
   }
